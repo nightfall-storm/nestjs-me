@@ -1,0 +1,10 @@
+services:
+  db:
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: nightfall
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: nightfallme
+
