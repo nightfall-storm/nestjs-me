@@ -8,6 +8,7 @@ import {
 } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { FreezePipe } from './pipes/freeze.pipe';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,10 +17,11 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
     }),
-    new FreezePipe(),
+    // new FreezePipe(),
   );
 
   app.useGlobalFilters(new AllExceptionsFilter());
+  app.use(cookieParser());
 
   const config = new DocumentBuilder()
     .setTitle('Example')

@@ -24,11 +24,11 @@ import { RequestService } from './request.service';
   ],
   providers: [
     RequestService,
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: LoggingInterceptor,
-      scope: Scope.REQUEST,
-    },
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: LoggingInterceptor,
+    //   scope: Scope.REQUEST,
+    // },
   ],
 })
 export class AppModule {}

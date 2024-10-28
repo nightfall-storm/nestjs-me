@@ -5,11 +5,14 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { AuthDto, SignupAuthDto } from 'src/auth/dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
 // import { RequestService } from 'src/request.service';
 
 @Injectable()
 export class AuthService {
-  private readonly logger = new Logger(AuthService.name);
+  readonly logger = new Logger(AuthService.name);
+  private expiresAccessToken = new Date();
+
   constructor(
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
@@ -17,7 +20,7 @@ export class AuthService {
     // private readonly reqService: RequestService,
   ) {}
 
-  async login(dto: AuthDto) {
+  async login(dto: AuthDto, res: Response) {
     // Retrieve user
     const user = await this.prisma.user.findUnique({
       where: {
@@ -32,7 +35,7 @@ export class AuthService {
     if (!isPasswordValid) throw new ForbiddenException('Credentials incorrect');
 
     // this.logger.log('Hello User ID:', this.reqService.getUserId());
-    return this.signToken(user.id, user.email);
+    return this.signToken(user.id, user.email, res);
   }
 
   async inscription(dto: SignupAuthDto) {
@@ -47,6 +50,7 @@ export class AuthService {
           hash,
         },
       });
+
       return this.signToken(user.id, user.email);
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError) {
@@ -62,13 +66,26 @@ export class AuthService {
   async signToken(
     userId: number,
     email: string,
+    response?: Response,
   ): Promise<{ access_token: string }> {
+    const expiresInMs = parseInt(
+      this.config.getOrThrow<string>('JWT_ACCESS_TOKEN_EXPIRATION_MS'),
+    );
+    const expiresIn = new Date(Date.now() + expiresInMs); // Calculate the expiry as a Date object
     const payload = { sub: userId, email };
     const secret = this.config.get('JWT_SECRET');
-    const token = await this.jwt.signAsync(payload, {
+    const accessToken = await this.jwt.signAsync(payload, {
       secret,
       expiresIn: '1h',
     });
-    return { access_token: token };
+    if (response) {
+      response.cookie('Authentication', accessToken, {
+        httpOnly: true,
+        secure: true,
+        expires: expiresIn,
+      });
+    }
+
+    return { access_token: accessToken };
   }
 }
