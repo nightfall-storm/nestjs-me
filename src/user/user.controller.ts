@@ -1,23 +1,25 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { User } from '@prisma/client';
-import { GetUser } from 'src/auth/decorator';
+import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Request, Response } from 'express';
 import { JwtAuthGuard } from 'src/auth/guard';
-import { UserDto } from './dto';
-import { ResponseWrapper } from 'src/common/filters/dto/response.wrapper';
+import { UserService } from './user.service';
+import { AuthGuard } from 'src/guards/authentication.guard';
+import { GetUser } from 'src/auth/decorator';
+import { User } from '@prisma/client';
 
 @ApiTags('users')
 @Controller('users')
+@UseGuards(AuthGuard)
 export class UserController {
-  @UseGuards(JwtAuthGuard)  // Protect this route with the JWT guard
-  @Get('me')
+  constructor(private readonly service: UserService) {}
   @ApiBearerAuth()
-  @ApiOkResponse({
-    description: 'User Authorized Successfully',
-    type: ResponseWrapper,
-  })
-  async getMe(@GetUser() user: User): Promise<ResponseWrapper<UserDto>> {
-    delete user.hash; // Remove sensitive data
-    return new ResponseWrapper(true, user, 'User information retrieved successfully');
+  @UseGuards(JwtAuthGuard) // Protect this route with the JWT guard
+  @Get('me')
+  async getUser(@GetUser() user: User) {
+    return this.service.getUser(user);
   }
+
+  // async getUser(@Req() req: Request) {
+  //   return this.service.getUser(req);
+  // }
 }

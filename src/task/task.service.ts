@@ -5,7 +5,7 @@ import { CreateTaskDto, TaskDto, TaskResponseDto, UpdateTaskDto } from './dto/ta
 
 @Injectable()
 export class TaskService {
-    constructor(private prisma: PrismaService) { }
+    constructor(private readonly prisma: PrismaService) { }
 
     async createTask(dto: CreateTaskDto, userId: number): Promise<TaskResponseDto> {
         const task = await this.prisma.task.create({

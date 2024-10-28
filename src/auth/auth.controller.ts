@@ -2,6 +2,7 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto, AuthResponseDto } from './dto';
 import { ApiBody, ApiCreatedResponse, ApiOkResponse, ApiBadRequestResponse, ApiUnauthorizedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FreezePipe } from 'src/pipes/freeze.pipe';
 
 @ApiTags('user authentication')
 @Controller('auth')
@@ -17,7 +18,7 @@ export class AuthController {
     @ApiUnauthorizedResponse({ description: 'Invalid credentials provided.' })  // Add this line
     @ApiBadRequestResponse({ description: 'Bad request, validation errors occurred.' })  // Add this line
     @ApiBody({ type: AuthDto }) 
-    login(@Body() dto: AuthDto) {
+    login(@Body(new FreezePipe()) dto: AuthDto) {
         return this.service.login(dto);
     }
 
