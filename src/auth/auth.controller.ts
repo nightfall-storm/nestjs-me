@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Body, Controller, Post, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto, AuthResponseDto } from './dto';
 import {
@@ -11,6 +11,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Response } from 'express';
+import { JwtAuthGuard } from './guard';
+import { JwtRefreshAuthGuard } from './guard/jwt-refresh.guard';
 
 @ApiTags('user authentication')
 @Controller('auth')
@@ -18,6 +20,7 @@ export class AuthController {
   constructor(private service: AuthService) {}
 
   @Post('login')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'User Login Authentication' })
   @ApiOkResponse({
     description: 'User Authorized Successfully',
@@ -49,5 +52,21 @@ export class AuthController {
   @ApiBody({ type: AuthDto })
   Inscription(@Body() dto: AuthDto) {
     return this.service.inscription(dto);
+  }
+
+  @Post('refresh')
+  @UseGuards(JwtRefreshAuthGuard)
+  @ApiOperation({ summary: 'Refresh Access Token' })
+  @ApiBody({ type: AuthDto })
+  async refresh(@Body() dto: AuthDto, @Res() res: Response) {
+    try {
+      const result = await this.service.refreshToken(dto, res);
+      return res.status(200).json(result); // Explicitly send the response here
+    } catch (error) {
+      this.service.logger.error('Error during login', error); // Log error for debugging
+      return res
+        .status(500)
+        .json({ success: false, message: 'Internal server error' }); // Handle error response
+    }
   }
 }
