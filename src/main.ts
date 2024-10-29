@@ -27,6 +27,14 @@ async function bootstrap() {
     .setTitle('Example')
     .setDescription('Auth user example')
     .setVersion('1.0')
+    .addCookieAuth('Authentication', {
+      type: 'apiKey',
+      in: 'cookie',
+    })
+    .addCookieAuth('Refresh', {
+      type: 'apiKey',
+      in: 'cookie',
+    })
     .addBearerAuth()
     .build();
 

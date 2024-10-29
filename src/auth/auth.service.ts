@@ -66,6 +66,21 @@ export class AuthService {
     }
   }
 
+  logout(res: Response) {
+    res.cookie('Authentication', '', {
+      httpOnly: true,
+      secure: true,
+      expires: new Date(0), // Expiry in the past
+    });
+    res.cookie('Refresh', '', {
+      httpOnly: true,
+      secure: true,
+      expires: new Date(0), // Expiry in the past
+    });
+
+    return { message: 'Logged out successfully' };
+  }
+
   async refreshToken(dto: AuthDto, res: Response) {
     // Retrieve user
     const user = await this.prisma.user.findUnique({
@@ -108,7 +123,7 @@ export class AuthService {
       if (!user) throw new ForbiddenException('no user found');
 
       const isTokenValid = await argon.verify(user.refreshToken, refreshToken);
-      if (!isTokenValid) throw new UnauthorizedException();
+      if (!isTokenValid) throw new UnauthorizedException('invalid token');
 
       return user;
     } catch (err) {
@@ -120,7 +135,7 @@ export class AuthService {
     userId: number,
     email: string,
     response?: Response,
-  ): Promise<{ access_token: string }> {
+  ): Promise<{ accessToken: string }> {
     const expiresIn = new Date(
       Date.now() +
         parseInt(
@@ -139,8 +154,12 @@ export class AuthService {
       secure: true,
       expires: expiresIn,
     });
-
-    return { access_token: accessToken };
+    // const accessRefreshToken = await this.signRefreshToken(
+    //   userId,
+    //   email,
+    //   response,
+    // );
+    return { accessToken };
   }
   async signRefreshToken(
     userId: number,

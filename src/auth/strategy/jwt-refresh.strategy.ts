@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Request } from 'express';
@@ -10,8 +10,8 @@ export class JwtRefreshStrategy extends PassportStrategy(
   Strategy,
   'jwt-refresh',
 ) {
+  private readonly logger = new Logger(JwtRefreshStrategy.name);
   constructor(
-    private readonly logger = new Logger(JwtRefreshStrategy.name),
     private readonly config: ConfigService,
     private readonly authService: AuthService,
   ) {
@@ -20,7 +20,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
         (request: Request) => request.cookies?.Refresh,
       ]),
       secretOrKey: config.get('JWT_REFRESH_SECRET'), // Use the secret key from your configuration
-      passReqToCallBack: true,
+      passReqToCallback: true,
     });
   }
 
@@ -30,6 +30,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
   ): Promise<{
     refreshToken: string;
   }> {
+    // this.logger.log('User id :' + payload.sub + 'email : ' + payload.email);
     return this.authService.verifyUserRefreshToken(
       payload.sub,
       request.cookies?.Refresh,

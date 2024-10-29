@@ -9,6 +9,7 @@ import {
   ApiUnauthorizedResponse,
   ApiOperation,
   ApiTags,
+  ApiCookieAuth,
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { JwtAuthGuard } from './guard';
@@ -20,7 +21,6 @@ export class AuthController {
   constructor(private service: AuthService) {}
 
   @Post('login')
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'User Login Authentication' })
   @ApiOkResponse({
     description: 'User Authorized Successfully',
@@ -54,10 +54,19 @@ export class AuthController {
     return this.service.inscription(dto);
   }
 
+  @Post('logout')
+  logout(@Res() res: Response) {
+    this.service.logout(res);
+    return res
+      .status(200)
+      .json({ success: true, message: 'Cookies cleared successfully' });
+  }
+
   @Post('refresh')
-  @UseGuards(JwtRefreshAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Refresh Access Token' })
   @ApiBody({ type: AuthDto })
+  @ApiCookieAuth('Authentication')
   async refresh(@Body() dto: AuthDto, @Res() res: Response) {
     try {
       const result = await this.service.refreshToken(dto, res);
